@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>IRON MAN HELMET HUD</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:Arial,Helvetica,sans-serif;color:#ff4a2a}
+body{touch-action:none}
+#camera{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;background:#000}
+#hud{position:fixed;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+#vignette{position:absolute;inset:0;background:radial-gradient(circle,transparent 42%,rgba(0,0,0,.25) 75%,rgba(0,0,0,.72) 100%)}
+/* frame */
+.corner{position:absolute;width:55px;height:55px;border-color:#ff4a2a;filter:drop-shadow(0 0 5px rgba(255,74,42,.8))}
+.c1{left:3%;top:3%;border-left:2px solid;border-top:2px solid}.c2{right:3%;top:3%;border-right:2px solid;border-top:2px solid}
+.c3{left:3%;bottom:3%;border-left:2px solid;border-bottom:2px solid}.c4{right:3%;bottom:3%;border-right:2px solid;border-bottom:2px solid}
+.hline{position:absolute;height:1px;background:#ff4a2a;opacity:.6;box-shadow:0 0 6px #ff4a2a}
+.hl1{left:8%;right:8%;top:12%}.hl2{left:8%;right:8%;bottom:12%}
+/* center targeting */
+#target{position:absolute;left:50%;top:50%;width:190px;height:190px;transform:translate(-50%,-50%);border:1px solid rgba(255,74,42,.9);border-radius:50%;box-shadow:0 0 14px rgba(255,74,42,.35),inset 0 0 25px rgba(255,74,42,.1);animation:spin 9s linear infinite}
+#target:before,#target:after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#ff4a2a}
+#target:before{width:245px;height:1px}.target-after{}#target:after{width:1px;height:245px}
+.target2{position:absolute;left:50%;top:50%;width:105px;height:105px;transform:translate(-50%,-50%);border:1px dashed #ff4a2a;border-radius:50%;animation:spinrev 5s linear infinite}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes spinrev{to{transform:translate(-50%,-50%) rotate(-360deg)}}
+#cross{position:absolute;left:50%;top:50%;width:28px;height:28px;transform:translate(-50%,-50%);border:2px solid #ff4a2a;box-shadow:0 0 12px #ff4a2a}
+#cross:before,#cross:after{content:"";position:absolute;background:#ff4a2a;left:50%;top:50%;transform:translate(-50%,-50%)}
+#cross:before{width:75px;height:1px}.cross-after{}#cross:after{width:1px;height:75px}
+/* arc reactor */
+#arc{position:absolute;left:50%;bottom:9%;width:82px;height:82px;transform:translateX(-50%);border:2px solid #53bfff;border-radius:50%;box-shadow:0 0 10px #53bfff,0 0 28px rgba(83,191,255,.75),inset 0 0 18px rgba(83,191,255,.8);animation:pulse 1.6s ease-in-out infinite}
+#arc:before,#arc:after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#53bfff}
+#arc:before{width:48px;height:48px;border-radius:50%;box-shadow:0 0 18px #53bfff}.arc-core{position:absolute;left:50%;top:50%;width:12px;height:12px;transform:translate(-50%,-50%);background:#e9fbff;border-radius:50%;box-shadow:0 0 12px #fff,0 0 25px #53bfff}
+@keyframes pulse{50%{transform:translateX(-50%) scale(1.07);opacity:.9}}
+.arc-label{position:absolute;left:50%;bottom:4.5%;transform:translateX(-50%);color:#53bfff;font-size:9px;letter-spacing:3px;text-shadow:0 0 7px #53bfff;white-space:nowrap}
+/* HUD text */
+.label{position:absolute;font-size:11px;line-height:1.7;letter-spacing:2px;text-shadow:0 0 7px currentColor}
+.tl{left:7%;top:6%;text-align:left}.tr{right:7%;top:6%;text-align:right}.bl{left:7%;bottom:8%;text-align:left}.br{right:7%;bottom:8%;text-align:right}
+.title{font-size:14px;font-weight:700;letter-spacing:4px}.blue{color:#53bfff}
+/* side bars */
+.panel{position:absolute;top:25%;width:112px;font-size:9px;letter-spacing:1px}
+.pl{left:7%}.pr{right:7%;text-align:right}
+.bar{height:5px;border:1px solid currentColor;margin:4px 0 9px;position:relative;overflow:hidden}
+.bar>i{display:block;height:100%;background:currentColor;box-shadow:0 0 7px currentColor}
+/* heartbeat */
+#heart{display:inline-block;font-size:15px;font-weight:bold}
+#bpm{font-variant-numeric:tabular-nums}
+/* scanning */
+#scanline{position:absolute;left:8%;right:8%;height:2px;background:linear-gradient(90deg,transparent,#ff4a2a,transparent);box-shadow:0 0 10px #ff4a2a;animation:scan 3.2s linear infinite;opacity:.75}
+@keyframes scan{0%{top:15%}50%{top:82%}100%{top:15%}}
+/* boot */
+#boot{position:fixed;inset:0;z-index:20;background:#000;color:#ff4a2a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center}
+#boot h1{font-size:25px;letter-spacing:7px;text-shadow:0 0 16px #ff4a2a}
+#boot p{font-size:10px;letter-spacing:2px;opacity:.75;max-width:280px;line-height:1.8}
+button{background:rgba(255,74,42,.08);color:#ff4a2a;border:1px solid #ff4a2a;border-radius:4px;padding:14px 22px;font-weight:bold;letter-spacing:3px;font-size:11px;box-shadow:0 0 12px rgba(255,74,42,.25)}
+#switch{position:fixed;z-index:25;right:14px;bottom:14px;display:none;padding:9px 11px;font-size:9px;pointer-events:auto}
+#fullscreen{position:fixed;z-index:25;left:14px;bottom:14px;display:none;padding:9px 11px;font-size:9px;pointer-events:auto}
+</style>
+</head>
+<body>
+<video id="camera" autoplay playsinline muted></video>
+<div id="boot">
+  <h1>IRON HUD</h1>
+  <p>CARDBOARD HELMET MODE<br>CAMERA + TARGETING + ARC REACTOR</p>
+  <button id="activate">ACTIVATE SYSTEM</button>
+</div>
+<div id="hud">
+  <div id="vignette"></div>
+  <div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>
+  <div class="hline hl1"></div><div class="hline hl2"></div>
+  <div id="target"></div><div class="target2"></div><div id="cross"></div>
+  <div id="scanline"></div>
+  <div class="label tl"><div class="title">STARK // HUD</div>SYSTEM <span id="sys">ONLINE</span><br>MODE: <span>HELMET</span><br>LINK: <span>STABLE</span></div>
+  <div class="label tr"><div class="title">SUIT STATUS</div>POWER <span id="power">87</span>%<br>CORE <span>98.4%</span><br>TEMP <span id="temp">36</span>°C</div>
+  <div class="panel pl">
+    TARGETING<br><span>TRACK</span><div class="bar"><i id="targetBar" style="width:82%"></i></div>
+    MOTION<br><span>ACTIVE</span><div class="bar"><i style="width:94%"></i></div>
+    OXYGEN<br><span>100%</span><div class="bar"><i style="width:100%"></i></div>
+    STABILIZER<br><span>READY</span><div class="bar"><i style="width:88%"></i></div>
+  </div>
+  <div class="panel pr">
+    <span id="heart">♥</span> HEART RATE<br><span id="bpm">78</span> BPM
+    <br><br>RANGE<br><span id="range">12.4</span> M
+    <br><br>THREAT<br><span id="threat">LOW</span>
+    <br><br>COMMS<br>CONNECTED
+  </div>
+  <div class="label bl">ARC REACTOR<br><span class="blue">ENERGY FLOW: NOMINAL</span><br>MICRO-SERVO: READY</div>
+  <div class="label br">J.A.R.V.I.S.<br><span id="message">SCANNING AREA...</span><br><span id="clock">--:--:--</span></div>
+  <div id="arc"><div class="arc-core"></div></div>
+  <div class="arc-label">ARC REACTOR</div>
+</div>
+<button id="switch">SWITCH CAMERA</button>
+<button id="fullscreen">FULLSCREEN</button>
+<script>
+let stream=null, facing='environment';
+const video=document.getElementById('camera');
+const boot=document.getElementById('boot');
+const activate=document.getElementById('activate');
+const switchBtn=document.getElementById('switch');
+const fullBtn=document.getElementById('fullscreen');
+async function startCamera(){
+  try{
+    if(stream) stream.getTracks().forEach(t=>t.stop());
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:facing},width:{ideal:1920},height:{ideal:1080}},audio:false});
+    video.srcObject=stream;
+    boot.style.display='none'; switchBtn.style.display='block'; fullBtn.style.display='block';
+  }catch(e){
+    alert('Camera access failed. Allow camera permission and make sure the page is opened with HTTPS (for example GitHub Pages).');
+  }
+}
+activate.addEventListener('click',startCamera);
+switchBtn.addEventListener('click',()=>{facing=facing==='environment'?'user':'environment';startCamera()});
+fullBtn.addEventListener('click',()=>{document.documentElement.requestFullscreen?.(); screen.orientation?.lock?.('landscape').catch(()=>{});});
+function rand(min,max){return Math.round((min+Math.random()*(max-min))*10)/10}
+setInterval(()=>{
+  document.getElementById('power').textContent=Math.round(rand(84,98));
+  document.getElementById('temp').textContent=Math.round(rand(34,39));
+  document.getElementById('bpm').textContent=Math.round(rand(67,91));
+  document.getElementById('range').textContent=rand(8,22).toFixed(1);
+  document.getElementById('targetBar').style.width=Math.round(rand(70,98))+'%';
+  const msgs=['SCANNING AREA...','TARGET LOCK READY','ENVIRONMENT CLEAR','LIFEFORM DETECTED','SYSTEM OPTIMAL','NO THREATS FOUND'];
+  document.getElementById('message').textContent=msgs[Math.floor(Math.random()*msgs.length)];
+},1800);
+setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString([], {hour12:false});},250);
+</script>
+</body>
+</html>
